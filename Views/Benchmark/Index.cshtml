@@ -1,0 +1,51 @@
+﻿@{
+    ViewData["Title"] = "Sistem Benchmarking";
+}
+
+<div class="container">
+    <h1>Configurare Test Benchmark</h1>
+
+    <form asp-action="RunCustomTest" method="post">
+        <div class="form-group">
+            <label>Entități</label><br />
+            @foreach (var entitate in new[] { "Customers", "Orders", "OrderItems" })
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="entities" value="@entitate" id="@entitate.ToLower()">
+                    <label class="form-check-label" for="@entitate.ToLower()">@entitate</label>
+                </div>
+            }
+        </div>
+
+        <div class="form-group">
+            <label>Operații CRUD</label><br />
+            @foreach (var op in new[] { "INSERT", "SELECT", "UPDATE", "DELETE" })
+            {
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" name="operations" value="@op" id="@op.ToLower()">
+                    <label class="form-check-label" for="@op.ToLower()">@op</label>
+                </div>
+            }
+        </div>
+
+        <div class="form-group">
+            <label for="iterations">Număr de iterații</label>
+            <input type="number" class="form-control" id="iterations" name="iterations" min="1" step="1" placeholder="Introdu numărul de iterații">
+        </div>
+
+
+        <div class="form-group">
+            <label>Tip Execuție</label><br />
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="executionModes" value="Sequential" id="seq">
+                <label class="form-check-label" for="seq">Secvențial</label>
+            </div>
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" name="executionModes" value="Parallel" id="par">
+                <label class="form-check-label" for="par">Paralel</label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Rulare Teste</button>
+    </form>
+</div>

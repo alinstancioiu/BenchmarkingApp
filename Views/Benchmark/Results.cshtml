@@ -1,0 +1,131 @@
+﻿@model List<BenchmarkingApp.Models.BenchmarkResult>
+
+@{
+    ViewData["Title"] = "Rezultate Benchmark";
+}
+
+<div class="container">
+    <h1>Rezultate Teste Benchmark</h1>
+
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Operație</th>
+                <th>Timp execuție (ms)</th>
+                <th>Tip Execuție</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var result in Model)
+            {
+                <tr>
+                    <td>@result.Operation</td>
+                    <td>@result.ExecutionTimeMs</td>
+                    <td>@(result.IsParallel ? "Paralel" : "Secvențial")</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h2>Grafic Performanță</h2>
+    <canvas id="benchmarkChart" width="800" height="400"></canvas>
+</div>
+
+<a class="btn btn-secondary" asp-action="Index">← Înapoi la configurare</a>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        const results = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model));
+
+        const labels = [...new Set(results.map(r => r.Operation))];
+
+        function mapData(filterFn) {
+            return labels.map(op => {
+                const res = results.find(r => filterFn(r, op));
+                return res ? res.ExecutionTimeMs : null;
+            });
+        }
+
+        const sequentialData = mapData((r, op) => !r.IsParallel && !op.includes("Media") && !op.includes("TimpCom"));
+        const parallelData = mapData((r, op) => r.IsParallel && !op.includes("Media") && !op.includes("TimpCom"));
+        const sequentialMediaData = mapData((r, op) => !r.IsParallel && op.includes("(Media)"));
+        const parallelMediaData = mapData((r, op) => r.IsParallel && op.includes("(Media)"));
+        const parallelCommRunData = mapData((r, op) => r.IsParallel && op.includes("TimpCom Run"));
+
+        const data = {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Secvențial',
+                    data: sequentialData,
+                    backgroundColor: 'rgba(52, 152, 219, 0.7)',
+                    borderColor: 'rgba(52, 152, 219, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Paralel',
+                    data: parallelData,
+                    backgroundColor: 'rgba(231, 76, 60, 0.7)',
+                    borderColor: 'rgba(231, 76, 60, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Media Secvențial',
+                    data: sequentialMediaData,
+                    backgroundColor: 'rgba(39, 174, 96, 0.7)',
+                    borderColor: 'rgba(39, 174, 96, 1)',
+                    borderWidth: 2,
+                    borderDash: [5, 5]
+                },
+                {
+                    label: 'Media Paralel',
+                    data: parallelMediaData,
+                    backgroundColor: 'rgba(243, 156, 18, 0.7)',
+                    borderColor: 'rgba(243, 156, 18, 1)',
+                    borderWidth: 2,
+                    borderDash: [5, 5]
+                },
+                {
+                    label: 'Timp Comunicare (per run)',
+                    data: parallelCommRunData,
+                    backgroundColor: 'rgba(155, 89, 182, 0.7)',
+                    borderColor: 'rgba(155, 89, 182, 1)',
+                    borderWidth: 2,
+                    borderDash: [3, 3]
+                }
+            ]
+        };
+
+        new Chart(document.getElementById('benchmarkChart'), {
+            type: 'bar',
+            data: data,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    title: {
+                        display: true,
+                        text: 'Timp Execuție: Secvențial vs Paralel + Timp Comunicare (per run)'
+                    }
+                },
+                interaction: {
+                    mode: 'index',
+                    intersect: false
+                },
+                scales: {
+                    x: {
+                        title: { display: true, text: 'Operații' }
+                    },
+                    y: {
+                        title: { display: true, text: 'Timp (ms)' },
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    </script>
+}
+
+
+
